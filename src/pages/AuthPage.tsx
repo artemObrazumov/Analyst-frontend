@@ -1,29 +1,40 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import AuthLayout from 'src/components/layouts/AuthLayout'
 import { useAuthStore } from 'src/stores/auth.store'
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
 
   function handleSubmit() {
-    login()
+    const displayName =
+      mode === 'register' && name.trim()
+        ? name.trim()
+        : email.trim().split('@')[0] || 'Пользователь'
+    login(displayName)
     navigate({ to: '/projects' })
   }
 
+  const inputClassName =
+    'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-sm space-y-6 p-8">
+    <AuthLayout>
+      <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <h2 className="text-2xl font-semibold">
             {mode === 'login' ? 'Войти' : 'Регистрация'}
-          </h1>
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === 'login' ? (
               <>
                 Нет аккаунта?{' '}
                 <button
+                  type="button"
                   onClick={() => setMode('register')}
                   className="text-primary underline underline-offset-4"
                 >
@@ -34,6 +45,7 @@ export default function AuthPage() {
               <>
                 Уже есть аккаунт?{' '}
                 <button
+                  type="button"
                   onClick={() => setMode('login')}
                   className="text-primary underline underline-offset-4"
                 >
@@ -49,28 +61,33 @@ export default function AuthPage() {
             <input
               type="text"
               placeholder="Имя"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={inputClassName}
             />
           )}
           <input
             type="email"
             placeholder="Email"
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputClassName}
           />
           <input
             type="password"
             placeholder="Пароль"
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+            className={inputClassName}
           />
         </div>
 
         <button
+          type="button"
           onClick={handleSubmit}
           className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
         >
           {mode === 'login' ? 'Войти' : 'Создать аккаунт'}
         </button>
       </div>
-    </div>
+    </AuthLayout>
   )
 }
