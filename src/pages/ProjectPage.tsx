@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { useParams, Link } from '@tanstack/react-router'
+import { getProject } from 'src/api/projects'
 
 const TABS = [
   { id: 1, label: 'Вкладка 1' },
@@ -10,6 +12,11 @@ const TABS = [
 export default function ProjectPage() {
   const { projectId } = useParams({ from: '/projects/$projectId' })
   const [activeTab, setActiveTab] = useState(1)
+
+  const { data: project } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => getProject(projectId),
+  })
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -23,13 +30,16 @@ export default function ProjectPage() {
           >
             <ArrowLeft className="size-6 shrink-0" strokeWidth={2.25} />
           </Link>
-          <p className="text-sm font-medium">Проект {projectId}</p>
+          <p className="text-sm font-medium">
+            {project?.name ?? `Проект ${projectId}`}
+          </p>
         </div>
 
         <nav>
           {TABS.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
               className={`w-full rounded-none px-4 py-2 text-left text-sm transition-colors ${
                 activeTab === tab.id
