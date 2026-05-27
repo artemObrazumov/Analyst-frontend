@@ -6,6 +6,7 @@ import { getProject } from 'src/api/projects'
 import ProjectAboutPanel from 'src/components/projects/ProjectAboutPanel'
 import ProjectKeysPanel from 'src/components/projects/ProjectKeysPanel'
 import ProjectTabPlaceholder from 'src/components/projects/ProjectTabPlaceholder'
+import FunnelsPanel from 'src/components/funnels/FunnelsPanel'
 import type { ProjectTabId } from 'src/types/project'
 
 const TABS: { id: ProjectTabId; label: string }[] = [
@@ -92,7 +93,7 @@ export default function ProjectPage() {
         )}
 
         {activeTab === 'funnels' && (
-          <ProjectTabPlaceholder title="Воронки" />
+          <FunnelsPanel projectId={projectId} />
         )}
       </main>
     </div>
