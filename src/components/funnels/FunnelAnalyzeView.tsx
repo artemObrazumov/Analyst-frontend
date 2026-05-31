@@ -238,24 +238,13 @@ export default function FunnelAnalyzeView({
             ) : (
               <div className="flex w-full flex-col items-center gap-2">
                 {steps.map((step, index) => {
-                  const stepCount = steps.length
-                  const widthPercent =
-                    stepCount <= 1
-                      ? 100
-                      : Math.max(
-                          100 - index * (45 / (stepCount - 1)),
-                          55,
-                        )
                   const nextStep = steps[index + 1]
                   return (
                     <div
                       key={step.stepId}
                       className="flex w-full flex-col items-center gap-1"
                     >
-                      <div
-                        className="flex min-h-16 items-center justify-between gap-4 rounded-lg border border-border bg-muted/40 px-4 py-3"
-                        style={{ width: `${widthPercent}%` }}
-                      >
+                      <div className="flex min-h-16 w-full items-center justify-between gap-4 rounded-lg border border-border bg-muted/40 px-4 py-3">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium">{step.label}</p>
                           <p className="truncate font-mono text-xs text-muted-foreground">

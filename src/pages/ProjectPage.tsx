@@ -5,6 +5,7 @@ import { useParams, Link } from '@tanstack/react-router'
 import { getProject } from 'src/api/projects'
 import ProjectAboutPanel from 'src/components/projects/ProjectAboutPanel'
 import ProjectKeysPanel from 'src/components/projects/ProjectKeysPanel'
+import DashboardsPanel from 'src/components/dashboards/DashboardsPanel'
 import ProjectTabPlaceholder from 'src/components/projects/ProjectTabPlaceholder'
 import FunnelsPanel from 'src/components/funnels/FunnelsPanel'
 import type { ProjectTabId } from 'src/types/project'
@@ -81,7 +82,7 @@ export default function ProjectPage() {
         )}
 
         {activeTab === 'dashboards' && (
-          <ProjectTabPlaceholder title="Дэшборды" />
+          <DashboardsPanel projectId={projectId} />
         )}
 
         {project && activeTab === 'keys' && (
