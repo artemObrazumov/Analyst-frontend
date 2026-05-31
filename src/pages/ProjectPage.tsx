@@ -6,7 +6,7 @@ import { getProject } from 'src/api/projects'
 import ProjectAboutPanel from 'src/components/projects/ProjectAboutPanel'
 import ProjectKeysPanel from 'src/components/projects/ProjectKeysPanel'
 import DashboardsPanel from 'src/components/dashboards/DashboardsPanel'
-import ProjectTabPlaceholder from 'src/components/projects/ProjectTabPlaceholder'
+import ExperimentsPanel from 'src/components/experiments/ExperimentsPanel'
 import FunnelsPanel from 'src/components/funnels/FunnelsPanel'
 import type { ProjectTabId } from 'src/types/project'
 
@@ -90,7 +90,7 @@ export default function ProjectPage() {
         )}
 
         {activeTab === 'experiments' && (
-          <ProjectTabPlaceholder title="Эксперименты" />
+          <ExperimentsPanel projectId={projectId} />
         )}
 
         {activeTab === 'funnels' && (
