@@ -2,8 +2,14 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ApiError } from 'src/api/errors'
 import { addFunnelStep } from 'src/api/funnels'
+import PropertyFilterRowsEditor from 'src/components/funnels/PropertyFilterRowsEditor'
 import { Button } from 'src/components/ui/button'
 import { inputClassName } from 'src/lib/form-styles'
+import {
+  buildPropertyFiltersMap,
+  emptyPropertyFilterRows,
+  validatePropertyFilterRows,
+} from 'src/lib/property-filters'
 import { toUserMessage } from 'src/lib/user-messages'
 
 interface AddFunnelStepFormProps {
@@ -17,18 +23,20 @@ export default function AddFunnelStepForm({
 }: AddFunnelStepFormProps) {
   const queryClient = useQueryClient()
   const [eventType, setEventType] = useState('')
-  const [label, setLabel] = useState('')
+  const [propertyRows, setPropertyRows] = useState(emptyPropertyFilterRows())
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: () =>
-      addFunnelStep(projectId, funnelId, {
+    mutationFn: () => {
+      const propertyFilters = buildPropertyFiltersMap(propertyRows)
+      return addFunnelStep(projectId, funnelId, {
         eventType: eventType.trim(),
-        label: label.trim(),
-      }),
+        ...(Object.keys(propertyFilters).length > 0 ? { propertyFilters } : {}),
+      })
+    },
     onSuccess: () => {
       setEventType('')
-      setLabel('')
+      setPropertyRows(emptyPropertyFilterRows())
       setError(null)
       void queryClient.invalidateQueries({
         queryKey: ['funnel', projectId, funnelId],
@@ -53,8 +61,9 @@ export default function AddFunnelStepForm({
           setError('Укажите тип события.')
           return
         }
-        if (!label.trim()) {
-          setError('Укажите подпись шага.')
+        const rowError = validatePropertyFilterRows(propertyRows)
+        if (rowError) {
+          setError(rowError)
           return
         }
         mutation.mutate()
@@ -62,44 +71,32 @@ export default function AddFunnelStepForm({
     >
       <p className="text-sm font-medium">Добавить шаг</p>
       <p className="text-xs text-muted-foreground">
-        Тип события должен совпадать с полем eventType при отправке через SDK
-        (POST /api/events/ingest).
+        Тип события должен совпадать с eventType при ingest. Свойства в шаге
+        сужают выборку (AND).
       </p>
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="step-event-type" className="text-sm text-muted-foreground">
-            Тип события
-          </label>
-          <input
-            id="step-event-type"
-            type="text"
-            value={eventType}
-            onChange={(e) => setEventType(e.target.value)}
-            placeholder="page_view"
-            className={`${inputClassName} font-mono`}
-            disabled={mutation.isPending}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="step-label" className="text-sm text-muted-foreground">
-            Подпись
-          </label>
-          <input
-            id="step-label"
-            type="text"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="Просмотр главной"
-            className={inputClassName}
-            disabled={mutation.isPending}
-          />
-        </div>
+      <div className="space-y-1.5">
+        <label htmlFor="step-event-type" className="text-sm text-muted-foreground">
+          Тип события
+        </label>
+        <input
+          id="step-event-type"
+          type="text"
+          value={eventType}
+          onChange={(e) => setEventType(e.target.value)}
+          placeholder="page_view"
+          className={`${inputClassName} font-mono`}
+          disabled={mutation.isPending}
+        />
       </div>
+
+      <PropertyFilterRowsEditor
+        rows={propertyRows}
+        onChange={setPropertyRows}
+        disabled={mutation.isPending}
+      />
 
       <Button type="submit" size="sm" disabled={mutation.isPending}>
         {mutation.isPending ? 'Добавление…' : 'Добавить шаг'}

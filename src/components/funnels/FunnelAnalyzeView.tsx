@@ -16,6 +16,7 @@ import {
   formatUsersCount,
 } from 'src/lib/format-metrics'
 import { inputClassName } from 'src/lib/form-styles'
+import { funnelStepDisplayTitle } from 'src/lib/funnel-step-display'
 import { cn } from 'src/lib/utils'
 
 interface FunnelAnalyzeViewProps {
@@ -246,9 +247,11 @@ export default function FunnelAnalyzeView({
                     >
                       <div className="flex min-h-16 w-full items-center justify-between gap-4 rounded-lg border border-border bg-muted/40 px-4 py-3">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">{step.label}</p>
-                          <p className="truncate font-mono text-xs text-muted-foreground">
-                            {step.eventType}
+                          <p className="truncate text-sm font-medium font-mono">
+                            {funnelStepDisplayTitle(
+                              step.eventType,
+                              step.propertyFilters,
+                            )}
                           </p>
                         </div>
                         <div className="shrink-0 text-right">

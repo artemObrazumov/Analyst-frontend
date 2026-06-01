@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react'
 import { ApiError } from 'src/api/errors'
 import {
   deleteDashboard,
-  deleteDashboardChart,
+  deleteDashboardSeries,
   getDashboard,
   updateDashboard,
 } from 'src/api/dashboards'
-import AddDashboardChartDialog from 'src/components/dashboards/AddDashboardChartDialog'
+import AddDashboardSeriesDialog from 'src/components/dashboards/AddDashboardSeriesDialog'
+import EditDashboardSeriesDialog from 'src/components/dashboards/EditDashboardSeriesDialog'
 import { Button } from 'src/components/ui/button'
-import { chartTypeLabel } from 'src/lib/chart-labels'
-import { formatChartFiltersSummary } from 'src/lib/chart-filters'
+import { formatSeriesFiltersSummary } from 'src/lib/series-filters'
+import { seriesPeriodLabel } from 'src/lib/series-period'
 import { inputClassName } from 'src/lib/form-styles'
 import { toUserMessage } from 'src/lib/user-messages'
+import type { DashboardSeriesResponse } from 'src/types/dashboard'
 
 interface DashboardEditViewProps {
   projectId: string
@@ -33,7 +35,9 @@ export default function DashboardEditView({
   const [description, setDescription] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
-  const [addChartOpen, setAddChartOpen] = useState(false)
+  const [addSeriesOpen, setAddSeriesOpen] = useState(false)
+  const [editingSeries, setEditingSeries] =
+    useState<DashboardSeriesResponse | null>(null)
 
   const { data: dashboard, isLoading, isError } = useQuery({
     queryKey: ['dashboard', projectId, dashboardId],
@@ -83,26 +87,33 @@ export default function DashboardEditView({
     },
   })
 
-  const deleteChartMutation = useMutation({
-    mutationFn: (chartId: string) =>
-      deleteDashboardChart(projectId, dashboardId, chartId),
+  const deleteSeriesMutation = useMutation({
+    mutationFn: (seriesId: string) =>
+      deleteDashboardSeries(projectId, dashboardId, seriesId),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['dashboard', projectId, dashboardId],
-      })
+      handleSeriesUpdated()
     },
   })
 
+  function handleSeriesUpdated() {
+    void queryClient.invalidateQueries({
+      queryKey: ['dashboard', projectId, dashboardId],
+    })
+    void queryClient.invalidateQueries({
+      queryKey: ['dashboard-page', projectId, dashboardId],
+    })
+  }
+
   function handleDelete() {
     const confirmed = window.confirm(
-      'Удалить дэшборд и все графики? Это действие нельзя отменить.',
+      'Удалить дэшборд и все серии? Это действие нельзя отменить.',
     )
     if (confirmed) deleteMutation.mutate()
   }
 
-  function handleDeleteChart(chartId: string, title: string) {
-    const confirmed = window.confirm(`Удалить график «${title}»?`)
-    if (confirmed) deleteChartMutation.mutate(chartId)
+  function handleDeleteSeries(seriesId: string, label: string) {
+    const confirmed = window.confirm(`Удалить серию «${label}»?`)
+    if (confirmed) deleteSeriesMutation.mutate(seriesId)
   }
 
   function handleSave(e: React.FormEvent) {
@@ -131,9 +142,7 @@ export default function DashboardEditView({
     )
   }
 
-  const charts = [...dashboard.charts].sort(
-    (a, b) => a.chartOrder - b.chartOrder,
-  )
+  const seriesList = [...dashboard.series].sort((a, b) => a.position - b.position)
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -209,63 +218,80 @@ export default function DashboardEditView({
 
       <section>
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h3 className="text-lg font-semibold">Графики</h3>
-          <Button type="button" size="sm" onClick={() => setAddChartOpen(true)}>
+          <h3 className="text-lg font-semibold">Серии</h3>
+          <Button type="button" size="sm" onClick={() => setAddSeriesOpen(true)}>
             <Plus className="size-4" />
-            Добавить график
+            Добавить серию
           </Button>
         </div>
 
-        {charts.length === 0 ? (
+        {seriesList.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Графиков пока нет. Добавьте первый график.
+            Серий пока нет. Добавьте первую серию.
           </p>
         ) : (
           <ul className="space-y-2">
-            {charts.map((chart) => {
-              const filtersSummary = formatChartFiltersSummary(chart.filters)
+            {seriesList.map((item) => {
+              const filtersSummary = formatSeriesFiltersSummary(item)
               return (
-              <li
-                key={chart.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{chart.title}</p>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {chart.eventType} · {chartTypeLabel(chart.chartType)}
-                  </p>
-                  {filtersSummary && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Фильтры: {filtersSummary}
-                    </p>
-                  )}
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleDeleteChart(chart.id, chart.title)}
-                  disabled={deleteChartMutation.isPending}
-                  aria-label="Удалить график"
+                <li
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3"
                 >
-                  <Trash2 className="size-4" />
-                </Button>
-              </li>
-            )})}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{item.label}</p>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {item.eventType} · {seriesPeriodLabel(item.period)}
+                    </p>
+                    {filtersSummary && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Фильтры: {filtersSummary}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setEditingSeries(item)}
+                    title="Редактировать серию"
+                    aria-label="Редактировать серию"
+                    className="border-primary/40 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20 hover:text-primary"
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => handleDeleteSeries(item.id, item.label)}
+                    disabled={deleteSeriesMutation.isPending}
+                    aria-label="Удалить серию"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>
 
-      <AddDashboardChartDialog
+      <AddDashboardSeriesDialog
         projectId={projectId}
         dashboardId={dashboardId}
-        open={addChartOpen}
-        onClose={() => setAddChartOpen(false)}
-        onAdded={() => {
-          void queryClient.invalidateQueries({
-            queryKey: ['dashboard', projectId, dashboardId],
-          })
-        }}
+        open={addSeriesOpen}
+        onClose={() => setAddSeriesOpen(false)}
+        onAdded={handleSeriesUpdated}
+      />
+
+      <EditDashboardSeriesDialog
+        projectId={projectId}
+        dashboardId={dashboardId}
+        series={editingSeries}
+        open={editingSeries !== null}
+        onClose={() => setEditingSeries(null)}
+        onUpdated={handleSeriesUpdated}
       />
     </div>
   )

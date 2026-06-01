@@ -1,25 +1,22 @@
 import ReactECharts from 'echarts-for-react'
-import type { DashboardChartWithData } from 'src/types/dashboard'
-import { chartTypeLabel } from 'src/lib/chart-labels'
-import { formatChartFiltersSummary } from 'src/lib/chart-filters'
+import type { DashboardSeriesWithData } from 'src/types/dashboard'
+import { formatSeriesFiltersSummary } from 'src/lib/series-filters'
+import { seriesPeriodLabel } from 'src/lib/series-period'
 
-interface DashboardChartCardProps {
-  chart: DashboardChartWithData
+interface DashboardSeriesCardProps {
+  series: DashboardSeriesWithData
 }
 
-function formatChartDate(isoDate: string): string {
+function formatSeriesDate(isoDate: string): string {
   const [, m, d] = isoDate.split('-')
   return `${d}.${m}`
 }
 
-export default function DashboardChartCard({ chart }: DashboardChartCardProps) {
-  const filtersSummary = formatChartFiltersSummary(chart.filters)
-  const dates = chart.data.map((p) => formatChartDate(p.date))
-  const counts = chart.data.map((p) => p.count)
-  const hasData = chart.data.length > 0
-
-  const seriesType =
-    chart.chartType === 'area' ? 'line' : chart.chartType
+export default function DashboardSeriesCard({ series }: DashboardSeriesCardProps) {
+  const filtersSummary = formatSeriesFiltersSummary(series)
+  const dates = series.data.map((p) => formatSeriesDate(p.date))
+  const counts = series.data.map((p) => p.count)
+  const hasData = series.data.length > 0
 
   const option = {
     grid: { left: 48, right: 16, top: 24, bottom: 32 },
@@ -31,15 +28,15 @@ export default function DashboardChartCard({ chart }: DashboardChartCardProps) {
     },
     yAxis: {
       type: 'value' as const,
+      min: 0,
       minInterval: 1,
       axisLabel: { fontSize: 11 },
     },
     series: [
       {
-        type: seriesType,
+        type: 'line' as const,
         data: counts,
-        smooth: chart.chartType === 'line',
-        areaStyle: chart.chartType === 'area' ? { opacity: 0.25 } : undefined,
+        smooth: true,
         itemStyle: { color: '#4f5bd5' },
       },
     ],
@@ -48,9 +45,9 @@ export default function DashboardChartCard({ chart }: DashboardChartCardProps) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3">
-        <h4 className="font-medium">{chart.title}</h4>
+        <h4 className="font-medium">{series.label}</h4>
         <p className="font-mono text-xs text-muted-foreground">
-          {chart.eventType} · {chartTypeLabel(chart.chartType)}
+          {series.eventType} · {seriesPeriodLabel(series.period)}
           {filtersSummary && (
             <>
               <span className="mx-1">·</span>

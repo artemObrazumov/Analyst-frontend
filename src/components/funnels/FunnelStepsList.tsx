@@ -4,6 +4,7 @@ import { GripVertical, Trash2 } from 'lucide-react'
 import { deleteFunnelStep, reorderFunnelSteps } from 'src/api/funnels'
 import { Button } from 'src/components/ui/button'
 import { arrayMove } from 'src/lib/array-move'
+import { funnelStepDisplayTitle } from 'src/lib/funnel-step-display'
 import { useNotifyStore } from 'src/stores/notify.store'
 import type { FunnelStepResponse } from 'src/types/funnel'
 
@@ -63,9 +64,8 @@ export default function FunnelStepsList({
   }
 
   function handleDelete(step: FunnelStepResponse) {
-    const confirmed = window.confirm(
-      `Удалить шаг «${step.label}» (${step.eventType})?`,
-    )
+    const title = funnelStepDisplayTitle(step.eventType, step.propertyFilters)
+    const confirmed = window.confirm(`Удалить шаг «${title}»?`)
     if (confirmed) deleteMutation.mutate(step.id)
   }
 
@@ -105,9 +105,8 @@ export default function FunnelStepsList({
             {index + 1}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{step.label}</p>
-            <p className="truncate font-mono text-xs text-muted-foreground">
-              {step.eventType}
+            <p className="truncate text-sm font-medium font-mono">
+              {funnelStepDisplayTitle(step.eventType, step.propertyFilters)}
             </p>
           </div>
           <Button

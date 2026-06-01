@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { Button } from 'src/components/ui/button'
 import { inputClassName } from 'src/lib/form-styles'
-import type { ChartFiltersFormState } from 'src/lib/chart-filters'
+import type { SeriesFiltersFormState } from 'src/lib/series-filters'
 
 const PLATFORM_OPTIONS = [
   { value: '', label: 'Не выбрано' },
@@ -10,22 +10,22 @@ const PLATFORM_OPTIONS = [
   { value: 'android', label: 'Android' },
 ] as const
 
-interface ChartFiltersFieldsProps {
-  form: ChartFiltersFormState
-  onChange: (form: ChartFiltersFormState) => void
+interface SeriesFiltersFieldsProps {
+  form: SeriesFiltersFormState
+  onChange: (form: SeriesFiltersFormState) => void
   disabled?: boolean
 }
 
-export default function ChartFiltersFields({
+export default function SeriesFiltersFields({
   form,
   onChange,
   disabled,
-}: ChartFiltersFieldsProps) {
+}: SeriesFiltersFieldsProps) {
   const [open, setOpen] = useState(false)
 
-  function updateField<K extends keyof ChartFiltersFormState>(
+  function updateField<K extends keyof SeriesFiltersFormState>(
     key: K,
-    value: ChartFiltersFormState[K],
+    value: SeriesFiltersFormState[K],
   ) {
     onChange({ ...form, [key]: value })
   }
@@ -75,11 +75,14 @@ export default function ChartFiltersFields({
         <div className="space-y-4 rounded-lg border border-border bg-background p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="filter-platform" className="text-xs text-muted-foreground">
+              <label
+                htmlFor="series-filter-platform"
+                className="text-xs text-muted-foreground"
+              >
                 Платформа
               </label>
               <select
-                id="filter-platform"
+                id="series-filter-platform"
                 value={form.platform}
                 onChange={(e) => updateField('platform', e.target.value)}
                 className={inputClassName}
@@ -93,14 +96,19 @@ export default function ChartFiltersFields({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="filter-country" className="text-xs text-muted-foreground">
+              <label
+                htmlFor="series-filter-country"
+                className="text-xs text-muted-foreground"
+              >
                 Страна (ISO)
               </label>
               <input
-                id="filter-country"
+                id="series-filter-country"
                 type="text"
                 value={form.country}
-                onChange={(e) => updateField('country', e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  updateField('country', e.target.value.toUpperCase())
+                }
                 placeholder="RU"
                 maxLength={2}
                 className={`${inputClassName} uppercase`}
@@ -108,39 +116,14 @@ export default function ChartFiltersFields({
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="filter-user" className="text-xs text-muted-foreground">
-                ID пользователя
-              </label>
-              <input
-                id="filter-user"
-                type="text"
-                value={form.userId}
-                onChange={(e) => updateField('userId', e.target.value)}
-                placeholder="user_123"
-                className={inputClassName}
-                disabled={disabled}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="filter-device" className="text-xs text-muted-foreground">
-                ID устройства
-              </label>
-              <input
-                id="filter-device"
-                type="text"
-                value={form.deviceId}
-                onChange={(e) => updateField('deviceId', e.target.value)}
-                placeholder="device_abc"
-                className={inputClassName}
-                disabled={disabled}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="filter-app-version" className="text-xs text-muted-foreground">
+              <label
+                htmlFor="series-filter-app-version"
+                className="text-xs text-muted-foreground"
+              >
                 Версия приложения
               </label>
               <input
-                id="filter-app-version"
+                id="series-filter-app-version"
                 type="text"
                 value={form.appVersion}
                 onChange={(e) => updateField('appVersion', e.target.value)}
@@ -150,11 +133,14 @@ export default function ChartFiltersFields({
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="filter-os-version" className="text-xs text-muted-foreground">
+              <label
+                htmlFor="series-filter-os-version"
+                className="text-xs text-muted-foreground"
+              >
                 Версия ОС
               </label>
               <input
-                id="filter-os-version"
+                id="series-filter-os-version"
                 type="text"
                 value={form.osVersion}
                 onChange={(e) => updateField('osVersion', e.target.value)}
@@ -167,7 +153,7 @@ export default function ChartFiltersFields({
 
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">
-              Свойства события (JSON)
+              Свойства события
             </p>
             {form.propertyRows.map((row, index) => (
               <div key={index} className="flex gap-2">

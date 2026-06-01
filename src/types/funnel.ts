@@ -21,7 +21,7 @@ export interface FunnelResponse {
 export interface FunnelStepResponse {
   id: string
   eventType: string
-  label: string
+  propertyFilters: Record<string, string>
   stepOrder: number
 }
 
@@ -31,7 +31,7 @@ export interface FunnelDetailResponse extends FunnelResponse {
 
 export interface AddFunnelStepRequest {
   eventType: string
-  label: string
+  propertyFilters?: Record<string, string>
 }
 
 export interface ReorderFunnelStepsRequest {
@@ -50,7 +50,7 @@ export interface FunnelAnalysisPeriod {
 export interface FunnelStepAnalysis {
   stepId: string
   eventType: string
-  label: string
+  propertyFilters: Record<string, string>
   stepOrder: number
   usersCount: number
   conversionFromPrevious: number | null

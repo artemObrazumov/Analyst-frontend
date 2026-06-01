@@ -1,21 +1,21 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { ApiError } from 'src/api/errors'
-import { addDashboardChart } from 'src/api/dashboards'
-import ChartFiltersFields from 'src/components/dashboards/ChartFiltersFields'
+import { addDashboardSeries } from 'src/api/dashboards'
+import SeriesFiltersFields from 'src/components/dashboards/SeriesFiltersFields'
 import Modal from 'src/components/ui/Modal'
 import { Button } from 'src/components/ui/button'
-import { CHART_TYPE_OPTIONS } from 'src/lib/chart-labels'
+import { SERIES_PERIOD_OPTIONS } from 'src/lib/series-period'
 import {
-  buildChartFiltersFromForm,
-  emptyChartFiltersForm,
-  validateChartFiltersForm,
-} from 'src/lib/chart-filters'
+  buildAddSeriesRequest,
+  emptySeriesFiltersForm,
+  validateSeriesFiltersForm,
+} from 'src/lib/series-filters'
 import { inputClassName } from 'src/lib/form-styles'
 import { toUserMessage } from 'src/lib/user-messages'
-import type { ChartType } from 'src/types/dashboard'
+import type { DashboardSeriesPeriod } from 'src/types/dashboard'
 
-interface AddDashboardChartDialogProps {
+interface AddDashboardSeriesDialogProps {
   projectId: string
   dashboardId: string
   open: boolean
@@ -23,34 +23,31 @@ interface AddDashboardChartDialogProps {
   onAdded: () => void
 }
 
-export default function AddDashboardChartDialog({
+export default function AddDashboardSeriesDialog({
   projectId,
   dashboardId,
   open,
   onClose,
   onAdded,
-}: AddDashboardChartDialogProps) {
-  const [title, setTitle] = useState('')
+}: AddDashboardSeriesDialogProps) {
+  const [label, setLabel] = useState('')
   const [eventType, setEventType] = useState('')
-  const [chartType, setChartType] = useState<ChartType>('line')
-  const [filtersForm, setFiltersForm] = useState(emptyChartFiltersForm)
+  const [period, setPeriod] = useState<DashboardSeriesPeriod>('7d')
+  const [filtersForm, setFiltersForm] = useState(emptySeriesFiltersForm)
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: () => {
-      const filters = buildChartFiltersFromForm(filtersForm)
-      return addDashboardChart(projectId, dashboardId, {
-        title: title.trim(),
-        eventType: eventType.trim(),
-        chartType,
-        ...(filters ? { filters } : {}),
-      })
-    },
+    mutationFn: () =>
+      addDashboardSeries(
+        projectId,
+        dashboardId,
+        buildAddSeriesRequest(label, period, eventType, filtersForm),
+      ),
     onSuccess: () => {
-      setTitle('')
+      setLabel('')
       setEventType('')
-      setChartType('line')
-      setFiltersForm(emptyChartFiltersForm())
+      setPeriod('7d')
+      setFiltersForm(emptySeriesFiltersForm())
       setError(null)
       onAdded()
       onClose()
@@ -59,7 +56,7 @@ export default function AddDashboardChartDialog({
       setError(
         err instanceof ApiError
           ? toUserMessage(err)
-          : 'Не удалось добавить график.',
+          : 'Не удалось добавить серию.',
       )
     },
   })
@@ -72,15 +69,15 @@ export default function AddDashboardChartDialog({
 
   function handleSubmit() {
     setError(null)
-    if (!title.trim()) {
-      setError('Укажите название графика.')
+    if (!label.trim()) {
+      setError('Укажите название серии.')
       return
     }
     if (!eventType.trim()) {
       setError('Укажите тип события.')
       return
     }
-    const filterError = validateChartFiltersForm(filtersForm)
+    const filterError = validateSeriesFiltersForm(filtersForm)
     if (filterError) {
       setError(filterError)
       return
@@ -92,7 +89,7 @@ export default function AddDashboardChartDialog({
     <Modal
       open={open}
       onClose={handleClose}
-      title="Добавить график"
+      title="Добавить серию"
       dismissible={!mutation.isPending}
       className="max-w-lg max-h-[90vh] overflow-y-auto"
     >
@@ -110,14 +107,14 @@ export default function AddDashboardChartDialog({
         )}
 
         <div className="space-y-1.5">
-          <label htmlFor="chart-title" className="text-sm font-medium">
+          <label htmlFor="series-label" className="text-sm font-medium">
             Название
           </label>
           <input
-            id="chart-title"
+            id="series-label"
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
             placeholder="Просмотры страниц"
             className={inputClassName}
             disabled={mutation.isPending}
@@ -126,11 +123,11 @@ export default function AddDashboardChartDialog({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="chart-event-type" className="text-sm font-medium">
+          <label htmlFor="series-event-type" className="text-sm font-medium">
             Тип события
           </label>
           <input
-            id="chart-event-type"
+            id="series-event-type"
             type="text"
             value={eventType}
             onChange={(e) => setEventType(e.target.value)}
@@ -141,17 +138,17 @@ export default function AddDashboardChartDialog({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="chart-type" className="text-sm font-medium">
-            Тип графика
+          <label htmlFor="series-period" className="text-sm font-medium">
+            Период
           </label>
           <select
-            id="chart-type"
-            value={chartType}
-            onChange={(e) => setChartType(e.target.value as ChartType)}
+            id="series-period"
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as DashboardSeriesPeriod)}
             className={inputClassName}
             disabled={mutation.isPending}
           >
-            {CHART_TYPE_OPTIONS.map((o) => (
+            {SERIES_PERIOD_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
@@ -159,7 +156,7 @@ export default function AddDashboardChartDialog({
           </select>
         </div>
 
-        <ChartFiltersFields
+        <SeriesFiltersFields
           form={filtersForm}
           onChange={setFiltersForm}
           disabled={mutation.isPending}

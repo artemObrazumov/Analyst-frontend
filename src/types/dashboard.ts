@@ -1,14 +1,4 @@
-export type ChartType = 'line' | 'bar' | 'area'
-
-export interface ChartFilters {
-  platform?: string | null
-  country?: string | null
-  deviceId?: string | null
-  userId?: string | null
-  appVersion?: string | null
-  osVersion?: string | null
-  properties?: Record<string, string> | null
-}
+export type DashboardSeriesPeriod = '7d' | '30d' | '90d'
 
 export interface CreateDashboardRequest {
   name: string
@@ -23,60 +13,65 @@ export interface UpdateDashboardRequest {
 export interface DashboardResponse {
   id: string
   projectId: string
-  createdBy: string
   name: string
   description: string | null
-  createdAt: string
-  updatedAt: string
 }
 
-export interface DashboardChartResponse {
+export interface DashboardSeriesResponse {
   id: string
-  title: string
-  chartType: ChartType
+  label: string
+  period: DashboardSeriesPeriod
   eventType: string
-  chartOrder: number
-  filters: ChartFilters
+  platform: string | null
+  osVersion: string | null
+  appVersion: string | null
+  country: string | null
+  propertyFilters: Record<string, string>
+  position: number
 }
 
 export interface DashboardDetailResponse extends DashboardResponse {
-  charts: DashboardChartResponse[]
+  series: DashboardSeriesResponse[]
 }
 
-export interface AddDashboardChartRequest {
-  title: string
-  chartType?: ChartType
+export interface AddDashboardSeriesRequest {
+  label: string
+  period?: DashboardSeriesPeriod
   eventType: string
-  filters?: ChartFilters
+  platform?: string | null
+  osVersion?: string | null
+  appVersion?: string | null
+  country?: string | null
+  propertyFilters?: Record<string, string>
 }
 
-export interface ReorderDashboardChartsRequest {
-  chartIds: string[]
+export interface UpdateDashboardSeriesRequest {
+  label: string
+  period: DashboardSeriesPeriod
+  eventType: string
+  platform?: string | null
+  osVersion?: string | null
+  appVersion?: string | null
+  country?: string | null
+  propertyFilters?: Record<string, string>
 }
 
-export interface ChartDataPoint {
+export interface ReorderDashboardSeriesRequest {
+  seriesIds: string[]
+}
+
+export interface SeriesDataPoint {
   date: string
   count: number
 }
 
-export interface DashboardChartWithData extends DashboardChartResponse {
-  data: ChartDataPoint[]
-}
-
-export interface DashboardPagePeriod {
-  from: string | null
-  to: string | null
+export interface DashboardSeriesWithData extends DashboardSeriesResponse {
+  data: SeriesDataPoint[]
 }
 
 export interface DashboardPageResponse {
   id: string
   name: string
   description: string | null
-  period: DashboardPagePeriod
-  charts: DashboardChartWithData[]
-}
-
-export interface DashboardPageQuery {
-  from?: string
-  to?: string
+  series: DashboardSeriesWithData[]
 }

@@ -1,14 +1,14 @@
 import { apiRequest } from 'src/api/client'
 import type {
-  AddDashboardChartRequest,
+  AddDashboardSeriesRequest,
   CreateDashboardRequest,
-  DashboardChartResponse,
   DashboardDetailResponse,
-  DashboardPageQuery,
   DashboardPageResponse,
   DashboardResponse,
-  ReorderDashboardChartsRequest,
+  DashboardSeriesResponse,
+  ReorderDashboardSeriesRequest,
   UpdateDashboardRequest,
+  UpdateDashboardSeriesRequest,
 } from 'src/types/dashboard'
 
 function dashboardPath(projectId: string, dashboardId?: string): string {
@@ -32,14 +32,10 @@ export function getDashboard(
 export function getDashboardPage(
   projectId: string,
   dashboardId: string,
-  query?: DashboardPageQuery,
 ): Promise<DashboardPageResponse> {
-  const params = new URLSearchParams()
-  if (query?.from) params.set('from', query.from)
-  if (query?.to) params.set('to', query.to)
-  const qs = params.toString()
-  const path = `${dashboardPath(projectId, dashboardId)}/page${qs ? `?${qs}` : ''}`
-  return apiRequest<DashboardPageResponse>(path)
+  return apiRequest<DashboardPageResponse>(
+    `${dashboardPath(projectId, dashboardId)}/page`,
+  )
 }
 
 export function createDashboard(
@@ -72,35 +68,47 @@ export function deleteDashboard(
   })
 }
 
-export function addDashboardChart(
+export function addDashboardSeries(
   projectId: string,
   dashboardId: string,
-  body: AddDashboardChartRequest,
-): Promise<DashboardChartResponse> {
-  return apiRequest<DashboardChartResponse>(
-    `${dashboardPath(projectId, dashboardId)}/charts`,
+  body: AddDashboardSeriesRequest,
+): Promise<DashboardSeriesResponse> {
+  return apiRequest<DashboardSeriesResponse>(
+    `${dashboardPath(projectId, dashboardId)}/series`,
     { method: 'POST', body },
   )
 }
 
-export function deleteDashboardChart(
+export function updateDashboardSeries(
   projectId: string,
   dashboardId: string,
-  chartId: string,
+  seriesId: string,
+  body: UpdateDashboardSeriesRequest,
+): Promise<DashboardSeriesResponse> {
+  return apiRequest<DashboardSeriesResponse>(
+    `${dashboardPath(projectId, dashboardId)}/series/${seriesId}`,
+    { method: 'PUT', body },
+  )
+}
+
+export function deleteDashboardSeries(
+  projectId: string,
+  dashboardId: string,
+  seriesId: string,
 ): Promise<void> {
   return apiRequest<void>(
-    `${dashboardPath(projectId, dashboardId)}/charts/${chartId}`,
+    `${dashboardPath(projectId, dashboardId)}/series/${seriesId}`,
     { method: 'DELETE' },
   )
 }
 
-export function reorderDashboardCharts(
+export function reorderDashboardSeries(
   projectId: string,
   dashboardId: string,
-  body: ReorderDashboardChartsRequest,
+  body: ReorderDashboardSeriesRequest,
 ): Promise<void> {
   return apiRequest<void>(
-    `${dashboardPath(projectId, dashboardId)}/charts/reorder`,
+    `${dashboardPath(projectId, dashboardId)}/series/reorder`,
     { method: 'PUT', body },
   )
 }
